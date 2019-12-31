@@ -1,7 +1,7 @@
 ## Interface: 80205
 ## Version: 1.0.2
 ## Title: !MooseSell -|cff224477 1.0.2|r
-## Notes: Automatically delete or sell unnecessary items !!!
+## Notes: Automatically delete or sell unnecessary items !!
 ## Author: Qk <Mooseheads>
 ## SavedVariablesPerCharacter: MooseSellDB
 

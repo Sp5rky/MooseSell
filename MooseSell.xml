@@ -1,0 +1,741 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/../FrameXML/UI.xsd">
+
+<!-- TEMPLATES -->
+	<Font name="VendomaticNormalFontWhite" inherits="GameFontNormalLeft" virtual="true">
+		<Color r="1.0" g="1.0" b="1.0"/>
+	</Font>
+	<Button name="SellItemTemplate" hidden="false" virtual="true" multiLine="false"> 
+		<Size>
+			<AbsDimension x="215" y="18" />
+		</Size>
+		<ButtonText name="$parentText">
+			<Size x="213" y="16"/>
+			<Anchors>
+				<Anchor point="LEFT">
+					<Offset>
+						<AbsDimension x="2" y="-2"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</ButtonText>
+		<NormalFont style="VendomaticNormalFontWhite"/>
+		<HighlightFont style="GameFontHighlightLeft"/>
+		<DisabledFont style="GameFontDisableLeft"/>
+	</Button>
+	<Button name="DragnDropFrame" hidden="false" virtual="true">
+		<Size>
+			<AbsDimension x="64" y="64"/>
+		</Size>
+	</Button>
+	<Frame name="VendomaticHighlightFrame" hidden="true">
+		<Size>
+			<AbsDimension x="213" y="18"/>
+		</Size>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture name="VendomaticSkillHighlight" file="Interface\Buttons\UI-Listbox-Highlight"/>
+			</Layer>
+		</Layers>
+	</Frame>
+	
+<!-- MINIMAP BUTTON -->
+	<Frame name="VendomaticButtonFrame" parent="Minimap" enableMouse="true" hidden="false">
+		<Size>
+			<AbsDimension x="32" y="32"/>
+		</Size>
+		<Frames>
+			<Button name="VendomaticButton" parent="Minimap" enableMouse="true" movable="true" hidden="false">
+				<Size>
+					<AbsDimension x="32" y="32"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="MyMod_MinimapButton_Icon" file="Interface\Icons\INV_Misc_Coin_01">
+							<Size>
+								<AbsDimension x="20" y="20"/>
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT">
+									<Offset>
+										<AbsDimension x="7" y="-5"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY">
+						<Texture file="Interface\Minimap\MiniMap-TrackingBorder">
+							<Size>
+								<AbsDimension x="55" y="55"/>
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Frame name="VendomaticButton_DraggingFrame" hidden="true">
+						<Scripts>
+							<OnUpdate>
+								MooseSell_MinimapButton_DraggingFrame_OnUpdate()
+							</OnUpdate>
+						</Scripts>
+					</Frame>
+				</Frames>
+				<HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight"/>
+				<Scripts>
+					<OnLoad>
+						VendomaticButton:RegisterForClicks("LeftButtonUp","RightButtonUp")
+						VendomaticButton:RegisterForDrag("LeftButton","RightButton")
+					</OnLoad>
+					<OnDragStart>
+						self.dragging = true
+						GameTooltip:Hide()
+						VendomaticButton:LockHighlight()
+						VendomaticButton_DraggingFrame:Show()
+					</OnDragStart>
+					<OnDragStop>
+						self.dragging = false
+						VendomaticButton:UnlockHighlight()
+						VendomaticButton_DraggingFrame:Hide()
+					</OnDragStop>
+					<OnClick>
+					</OnClick>
+					<OnDoubleClick>
+						if (tostring(button) == "LeftButton") then
+							if VendomaticFrame:IsVisible() then
+								VendomaticFrame:Hide();
+							else
+								VendomaticFrame:Show();
+							end
+						end
+					</OnDoubleClick>
+					<OnEnter>
+						if (not self.dragging) then
+							MooseSell_OnEnter(self)
+						end
+					</OnEnter>					
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+	
+<!-- ADDON FRAMES -->
+	<Frame name="VendomaticFrame" parent="UIParent" enableMouse="true" movable="true" frameStrata="LOW" hidden="true">
+		<Size x="320" y="32"/>
+		<Anchors>
+			<Anchor point="CENTER" relativeTo="UIParent">
+				<Offset x="0" y="-200"/>
+			</Anchor>
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" title="true">
+			<BackgroundInsets>
+				<AbsInset left="4" right="4" top="2" bottom="4"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+		</Backdrop>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="$parentText" inherits="GameFontNormalLarge" justifyH="CENTER" setAllPoints="true" text="MooseSell Trashlist"/>
+			</Layer>
+		</Layers>	
+		<Scripts>
+			<OnMouseDown> 
+				VendomaticFrame:StartMoving();  
+			</OnMouseDown>
+			<OnMouseUp>  
+				VendomaticFrame:StopMovingOrSizing(); 
+			</OnMouseUp>
+			<OnDragStop> 
+				VendomaticFrame:StopMovingOrSizing(); 
+			</OnDragStop>
+		</Scripts> 
+	</Frame>	
+	<Frame name="Vendomatic_OptionsSellFrame" parent="VendomaticFrame" enableMouse="true" movable="true" frameStrata="LOW" hidden="false">
+		<Size x="320" y="180"/>
+		<Anchors>
+			<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="VendomaticFrame">
+				<Offset x="0" y="0"/>
+			</Anchor>
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" title="true">
+			<BackgroundInsets>
+				<AbsInset left="4" right="4" top="2" bottom="4"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+		</Backdrop>	
+		<Frames>
+			<Button name="$parent_DropBox" hidden="false" parent="Vendomatic_OptionsSellFrame" inherits="ItemButtonTemplate" enableMouse="true">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="Vendomatic_OptionsSellFrame">
+						<Offset x="25" y="-45"/>
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parent_DropBackground" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+							<Size>
+								<AbsDimension x="65" y="65"/>
+							</Size>
+							<Anchors>
+								<Anchor point="CENTER">
+									<Offset x="0" y="-1"/>
+								</Anchor>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						Vendomatic_OptionsSellFrame_DropBox:RegisterForDrag("LeftButton");
+					</OnLoad>
+					<OnReceiveDrag>
+						MooseSell_FrameDragSell()
+					</OnReceiveDrag>
+					<OnClick>
+						if GetCursorInfo() then
+							MooseSell_FrameDragSell()
+						end
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_ButtonAdd" inherits="UIPanelButtonTemplate" text="Add">
+				<Size>
+					<AbsDimension x="110" y="25"/>
+				</Size>
+				<Anchors>
+			    	<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="Vendomatic_OptionsSellFrame">
+			    		<Offset x="35" y="-100"/>
+			    	</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						local MooseSell_AddText = Vendomatic_OptionsSellFrame_DropBoxText:GetText();
+						if MooseSell_AddText ~= "" then
+							MooseSell_AddItem(MooseSell_AddText);
+							Vendomatic_OptionsSellFrame_DropBoxIconTexture:SetTexture();
+							Vendomatic_OptionsSellFrame_DropBoxText:SetText("Name of Item to add ...");
+							MooseSell_SellFrameUpdate();
+						end
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_ButtonEff" inherits="UIPanelButtonTemplate" text="Remove">
+				<Size>
+					<AbsDimension x="110" y="25"/>
+				</Size>
+				<Anchors>
+			    	<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="Vendomatic_OptionsSellFrame">
+			    		<Offset x="-135" y="-100"/>
+			    	</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						Vendomatic_OptionsSellFrame_DropBoxIconTexture:SetTexture("");
+						Vendomatic_OptionsSellFrame_DropBoxText:SetText("Name of Item to add ...");
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_ButtonList" inherits="UIPanelButtonTemplate" text="List">
+				<Size>
+					<AbsDimension x="110" y="25"/>
+				</Size>
+				<Anchors>
+			    	<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="Vendomatic_OptionsSellFrame" >
+			    		<Offset x="35" y="15"/>
+			    	</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if (tostring(button) == "LeftButton") then
+							if Vendomatic_OptionsSellFrameList:IsVisible() then
+								SelectedSellItem = nil;
+								Vendomatic_OptionsSellFrameList:Hide();
+								MooseSell_Remove2();
+							else
+								Vendomatic_OptionsSellFrameList:Show();
+							end
+						end
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_ButtonClose" inherits="UIPanelButtonTemplate" text="Close">
+				<Size>
+					<AbsDimension x="110" y="25"/>
+				</Size>
+				<Anchors>
+			    	<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="Vendomatic_OptionsSellFrame" >
+			    		<Offset x="-135" y="15"/>
+			    	</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						Vendomatic_OptionsSellFrame_DropBoxIconTexture:SetTexture("");
+						Vendomatic_OptionsSellFrame_DropBoxText:SetText("Name of Item to add ...");
+						VendomaticFrame:Hide();
+						
+						SelectedSellItem = nil;
+						Vendomatic_OptionsSellFrameList:Hide();
+						MooseSell_Remove2();
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnShow>
+				
+			</OnShow>
+		</Scripts>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="$parentText" inherits="GameFontNormal" justifyH="CENTER" setAllPoints="true" text="Drop your item here ...">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent">
+							<Offset x="20" y="-15"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parent_DropBoxText" inherits="VendomaticNormalFontWhite" setAllPoints="true" text="Name of Item to add ...">
+					<Size>
+						<AbsDimension x="230" y="40"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="Vendomatic_OptionsSellFrame">
+							<Offset x="75" y="-43"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+	<Frame name="Vendomatic_OptionsSellFrameList" parent="VendomaticFrame" enableMouse="true" movable="true" hidden="true">
+		<Size x="320" y="380"/>
+		<Anchors>
+			<Anchor point="TOPRIGHT" relativePoint="TOPLEFT" relativeTo="VendomaticFrame">
+				<Offset x="-2" y="0"/>
+			</Anchor>
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" title="true">
+			<BackgroundInsets>
+				<AbsInset left="4" right="4" top="2" bottom="4"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="16"/>
+			</EdgeSize>
+		</Backdrop>	
+		<Frames>
+			<Frame name="SellItemFauxFrame" hidden="false">
+				<Size x="285" y="300"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="Vendomatic_OptionsSellFrameList">
+						<Offset x="18" y="-33"/>
+					</Anchor>
+				</Anchors>
+				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" title="true">
+					<BackgroundInsets>
+						<AbsInset left="2" right="4" top="4" bottom="4"/>
+					</BackgroundInsets>
+					<TileSize>
+						<AbsValue val="32"/>
+					</TileSize>
+					<EdgeSize>
+						<AbsValue val="14"/>
+					</EdgeSize>
+				</Backdrop>
+				<Frames>
+					<Button name="SellItemButton1" inherits="SellItemTemplate" text="items 1">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="SellItemFauxFrame" >
+					    		<Offset x="42" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_1" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="SellItemButton2" inherits="SellItemTemplate" text="items 2">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="SellItemButton1" >
+					    		<Offset x="0" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_2" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="SellItemButton3" inherits="SellItemTemplate" text="items 3">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="SellItemButton2" >
+					    		<Offset x="0" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_3" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="SellItemButton4" inherits="SellItemTemplate" text="items 4">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="SellItemButton3" >
+					    		<Offset x="0" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_4" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="SellItemButton5" inherits="SellItemTemplate" text="items 5">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="SellItemButton4" >
+					    		<Offset x="0" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_5" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="SellItemButton6" inherits="SellItemTemplate" text="items 6">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="SellItemButton5" >
+					    		<Offset x="0" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_6" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="SellItemButton7" inherits="SellItemTemplate" text="items 7">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="SellItemButton6" >
+					    		<Offset x="0" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_7" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="SellItemButton8" inherits="SellItemTemplate" text="items 8">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="SellItemButton7" >
+					    		<Offset x="0" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_8" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="SellItemButton9" inherits="SellItemTemplate" text="items 9">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="SellItemButton8" >
+					    		<Offset x="0" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_9" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Button name="SellItemButton10" inherits="SellItemTemplate" text="items 10">
+						<Anchors>
+					    	<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="SellItemButton9" >
+					    		<Offset x="0" y="-10"/>
+					    	</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture name="SellItemButton_10" file="Interface\Buttons\UI-EmptySlot-Disabled" setAllPoints="true">
+									<Size>
+										<AbsDimension x="24" y="24"/>
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="-32" y="0"/>
+										</Anchor>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnClick>
+								MooseSell_HighlightFrame(self);
+								SelectedSellItem = self:GetText();
+							</OnClick>
+						</Scripts>
+					</Button>
+				</Frames>
+			</Frame>
+			<Button name="SellItemFauxIncrementButton">
+				<Size>
+					<AbsDimension x="27" y="27"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="SellItemFauxFrame">
+						<Offset>
+							<AbsDimension x="-25" y="2"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MooseSell_SellFrameMoveUp();
+						SelectedSellItem = nil;
+						VendomaticHighlightFrame:Hide();
+					</OnClick>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\UI-ScrollBar-ScrollUpButton-Up"/>
+				<PushedTexture file="Interface\Buttons\UI-ScrollBar-ScrollUpButton-Down"/>
+				<DisabledTexture file="Interface\Buttons\UI-ScrollBar-ScrollUpButton-Disabled"/>
+				<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+			</Button>
+			<Button name="SellItemFauxDecrementButton">
+				<Size>
+					<AbsDimension x="27" y="27"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="SellItemFauxFrame">
+						<Offset>
+							<AbsDimension x="2" y="-3"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MooseSell_SellFrameMoveDown();
+						SelectedSellItem = nil;
+						VendomaticHighlightFrame:Hide();
+					</OnClick>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\UI-ScrollBar-ScrollDownButton-Up"/>
+				<PushedTexture file="Interface\Buttons\UI-ScrollBar-ScrollDownButton-Down"/>
+				<DisabledTexture file="Interface\Buttons\UI-ScrollBar-ScrollDownButton-Disabled"/>
+				<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+			</Button>
+			<Button name="$parent_ButtonRemove" inherits="UIPanelButtonTemplate" text="Remove">
+				<Size>
+					<AbsDimension x="110" y="25"/>
+				</Size>
+				<Anchors>
+			    	<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="Vendomatic_OptionsSellFrameList" >
+			    		<Offset x="35" y="15"/>
+			    	</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if SelectedSellItem ~= nil then
+							MooseSell_Remove(SelectedSellItem)
+							SelectedSellItem = nil;
+							VendomaticHighlightFrame:Hide();
+							MooseSell_SellFrameUpdate();
+						end
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_ButtonClose" inherits="UIPanelButtonTemplate" text="Close">
+				<Size>
+					<AbsDimension x="110" y="25"/>
+				</Size>
+				<Anchors>
+			    	<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="Vendomatic_OptionsSellFrameList" >
+			    		<Offset x="-135" y="15"/>
+			    	</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MooseSell_Remove2();
+						SelectedSellItem = nil;
+						Vendomatic_OptionsSellFrameList:Hide();
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnShow>
+				MooseSell_SellFrameUpdate();
+				VendomaticHighlightFrame:SetParent("SellItemFauxFrame");
+				VendomaticHighlightFrame:Hide();
+			</OnShow>
+		</Scripts>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="$parentText" inherits="GameFontNormalLarge" justifyH="CENTER" setAllPoints="true" text="Item List">
+					<Anchors>
+						<Anchor point="CENTER" relativePoint="TOP" relativeTo="$parent">
+							<Offset x="0" y="-18"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+</Ui>

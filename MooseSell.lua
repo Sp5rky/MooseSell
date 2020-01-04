@@ -1,5 +1,5 @@
 local OUR_NAME = "MooseSell"
-OUR_VERSION = 102
+OUR_VERSION = 1021
 local DEBUG = nil
 local Debug = DEBUG and function(s) DEFAULT_CHAT_FRAME:AddMessage(s, 1, 0, 0) end or function() return end  
 
@@ -592,10 +592,7 @@ function ms:cmdParser(optionTxt)
 		end
 		return
    elseif (option == L["purge"]) then
-      local useMinFree = msDB.useMinFree
-      msDB.useMinFree = false
       destroyJunk()
-      msDB.useMinFree = useMinFree
       return
    else
    	chatMsg(msPrefix.. L["MooseSell did not understand that option. Type '/ms help' for valid options."], true)

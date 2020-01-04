@@ -592,10 +592,7 @@ function ms:cmdParser(optionTxt)
 		end
 		return
    elseif (option == L["purge"]) then
-      local useMinFree = msDB.useMinFree
-      msDB.useMinFree = false
       destroyJunk()
-      msDB.useMinFree = useMinFree
       return
    else
    	chatMsg(msPrefix.. L["MooseSell did not understand that option. Type '/ms help' for valid options."], true)
